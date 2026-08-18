@@ -1,0 +1,177 @@
+# Colombian Stocks Technical Analysis Report
+## Data Source: Yahoo Finance (.COL suffix)
+### Covered tickers: ECOPETROL.COL, ISA.COL, GRUPOAVAL.COL, PFBCOLOM.COL, NUTRESA.COL, CEMARGOS.COL
+
+---
+
+## What This Document Covers
+
+We are going to conduct a series of reports on Colombian stocks. The idea is to use Yahoo Finance to obtain the data and perform 
+calculations for some indicators. To obtain the data, keep in mind that Yahoo Finance uses the .COL suffix, for example: ecopetrol.COL, ISA.COL.
+
+---
+
+## 1. Momentum Indicators (the most important)
+
+| Indicator | What it detects | How to use it (1 month) |
+|---|---|---|
+| **RSI (14)** | Overbought/Oversold | Looks for divergences or crossovers of 30/70. RSI < 30 + bullish reversal = possible buy. |
+| **MACD (12, 26, 9)** | Momentum change | MACD line crossover above the signal + positive histogram = bullish entry. |
+| **Stochastic (14, 3, 3)** | More sensitive to overbought/oversold | Similar to RSI, but faster. Good for short-term movements. |
+| **ROC or Momentum** | Trend strength | Confirmation that the movement has strength. |
+
+---
+
+## 2. Moving Averages (for trend and timing)
+
+- **EMA 9 and EMA 21** → The most commonly used for weekly timeframes.
+  - A bullish crossover of EMA 9 above EMA 21 = buy signal.
+  - Price above both = short-term uptrend.
+- **EMA 50** → Serves as a filter for underlying trends (if the price is above it, you're only looking for buy opportunities).
+
+---
+
+## 3. Simple Volume (Volume)
+
+This is the most basic indicator. It shows the number of shares (or contracts) traded in a given period (daily, hourly, etc.).
+
+**What it indicates:** It confirms the strength of a price movement.
+- Price rise + high volume → strong and reliable movement.
+- Price rise + low volume → weak movement (possibly a false breakout).
+- Price fall + high volume → strong selling pressure.
+
+---
+
+## 4. On-Balance Volume (OBV)
+
+One of the most widely used and simplest metrics.
+
+**How it's calculated:**
+- If the price closes higher than the previous day → add the day's volume to the OBV.
+- If the price closes lower → subtract the day's volume.
+- If it closes the same → the OBV remains the same.
+
+**What it looks for:** Detecting accumulation or distribution before the price moves. Divergences between price and OBV are important signals.
+
+---
+
+# EXTENDED INDICATORS — Merlin's Additions
+
+## 5. Average True Range (ATR) — Volatility Measurement
+
+**Why it's needed:** None of the existing indicators measure volatility. Without ATR, you can't set rational stop-losses or size positions based on market conditions. Colombian stocks can be volatile — Ecopetrol especially reacts to oil geopolitics.
+
+**How it works:**
+- True Range = max of: (High − Low), |High − Prev Close|, |Low − Prev Close|
+- ATR = 14-period smoothed average of True Range
+
+**How to use it:**
+- **Position sizing:** If ATR = 500 COP and your risk tolerance is 2% of capital, size your position so a 1× ATR move equals exactly 2% of your portfolio.
+- **Stop-loss placement:** Set stops at 1.5× to 2× ATR below entry. Avoids getting shaken out of normal volatility.
+- **Trend strength:** A falling ATR during a trend means the move is maturing and may reverse soon.
+- **Setting targets:** Use ATR to set profit targets (e.g., entry + 2× ATR for a swing trade).
+
+**Colombian stock note:** ECOPETROL.COL tends to see ATR spikes around OPEC meetings and Colombia's fiscal announcements. ISA.COL has lower ATR (more stable, regulated utility), so never use the same stop distance across different stocks.
+
+---
+
+## 6. Bollinger Bands (%B) — Mean Reversion & Volatility Regime
+
+**Why it's needed:** The document uses EMAs for trend but lacks a volatility envelope. Bollinger Bands wrap price with standard deviation bands, giving dynamic support/resistance that adapts to market conditions.
+
+**How it's calculated (20, 2):**
+- Middle Band = 20-period SMA (or EMA)
+- Upper Band = Middle Band + (2 × StdDev)
+- Lower Band = Middle Band − (2 × StdDev)
+- **%B** = (Price − Lower Band) / (Upper Band − Lower Band)
+
+**How to use it (complementing EMA strategy):**
+- **%B < 0** (price below lower band) + RSI < 30 = oversold bounce candidate. Example: ECOPETROL.COL tends to revert from these extremes within 3–7 sessions.
+- **%B > 1** (price above upper band) + RSI > 70 = overextended. Consider taking partial profits.
+- **Band squeeze** (bands narrowing significantly) = impending breakout. Combine with OBV direction to predict which way.
+- **%B crossing 0.5** from below = short-term momentum shift in your favor.
+
+**Combination with existing framework:**
+- If EMA 9 > EMA 21 (bullish) AND %B between 0.2 and 0.8 → trend is healthy, hold.
+- If EMA 9 > EMA 21 (bullish) AND %B > 1 → trend may be exhausted, reduce size.
+
+---
+
+## 7. Money Flow Index (MFI) — Volume-Weighted RSI
+
+**Why it's needed:** The document has RSI (pure price) and OBV (pure volume) but nothing that combines both. MFI bridges the gap. On Colombian stocks where volume can be thin, MFI filters out false RSI signals caused by low-liquidity moves.
+
+**How it's calculated (14 periods):**
+- Typical Price = (High + Low + Close) / 3
+- Raw Money Flow = Typical Price × Volume
+- Money Flow Ratio = Positive Money Flow / Negative Money Flow (over 14 periods)
+- MFI = 100 − (100 / (1 + Money Flow Ratio))
+
+**How to use it:**
+- **MFI < 20** = oversold (volume-confirmed). More reliable than RSI < 30 because it requires selling volume to dry up before reversing.
+- **MFI > 80** = overbought. On ISA.COL, this often precedes a 2–5% pullback.
+- **Divergence:** Price makes a higher high but MFI makes a lower high → distribution is happening → bearish divergence, strong sell signal.
+- **Confirmation:** Before entering based on RSI/Stochastic, check that MFI agrees. If RSI says oversold but MFI is at 50, there's no volume conviction behind the reversal yet.
+
+**Colombian stock note:** GRUPOAVAL.COL and PFBCOLOM.COL often trade on thin volume. MFI is especially valuable there — it prevents you from acting on RSI signals that are just noise from a few large trades.
+
+---
+
+## 8. Ichimoku Cloud (Kinko Hyo) — Multi-Timeframe Trend Matrix
+
+**Why it's needed:** The Colombian market has strong seasonal and political cycles. Ichimoku gives you trend direction, support/resistance, and timing all in one view. It's excellent for weekly and daily timeframes on stocks like ISA.COL and CEMARGOS.COL that trend well.
+
+**Components:**
+| Component | Calculation | Period | What it tells you |
+|---|---|---|---|
+| **Tenkan-sen** (Conversion) | (9H + 9L) / 2 | Fast | Short-term momentum, like a faster EMA 9 |
+| **Kijun-sen** (Base) | (26H + 26L) / 2 | Medium | Trend direction, like EMA 26. Price above = bullish. |
+| **Senkou Span A** (Leading 1) | (Tenkan + Kijun) / 2, shifted 26 ahead | Future | First cloud edge. First line of support/resistance. |
+| **Senkou Span B** (Leading 2) | (52H + 52L) / 2, shifted 26 ahead | Future | Second cloud edge. Stronger support/resistance. |
+| **Chikou Span** (Lagging) | Current close, shifted 26 behind | Past | Confirms trend if it's above/below price from 26 periods ago. |
+
+**How to use it on Colombian stocks:**
+
+- **Trend filter (weekly):** Price above the cloud = only take long setups. Price below cloud = only short or wait. This alone saves you from counter-trend losses.
+- **Kumo breakout (cloud breakout):** When price breaks through Senkou Span B, it's a major trend change. ECOPETROL.COL breakouts above the cloud on weekly tend to run 8–12 weeks.
+- **TK Cross (Tenkan above Kijun):** Like a fast EMA crossover. On daily, buy when Tenkan crosses above Kijun AND price is above the cloud.
+- **Support/Resistance:** The cloud acts as dynamic support in uptrends. ISA.COL often bounces off the cloud edge on daily dips.
+- **Chikou confirmation:** If Chikou is above price from 26 days ago, it confirms the trend has legs.
+
+**Combination with existing framework:**
+| Condition | Action |
+|---|---|
+| Price above cloud + EMA 9 > 21 + RSI < 70 | Strong buy signal — trend is up, pullback to buy |
+| Price inside cloud + OBV flat | No trade — chop, wait for breakout |
+| Price below cloud + MFI < 20 | Contrarian bounce only — tight stop |
+
+---
+
+## Quick Reference: When to Use Each Indicator
+
+| Indicator | Best for | When to trust it most |
+|---|---|---|
+| **RSI** | Quick overbought/oversold check | On high-volume days |
+| **MACD** | Trend-following entries | Weekly timeframe, after pullbacks |
+| **Stochastic** | Short-term timing | In ranging markets |
+| **OBV** | Early accumulation/distribution | Divergence with price = high conviction |
+| **ATR** | Position sizing & stop placement | Always — before every trade |
+| **Bollinger %B** | Mean reversion & exhaustion | At extremes with volume confirmation |
+| **MFI** | Volume-confirmed momentum | On thin stocks (Grupo Aval, PFB) |
+| **Ichimoku** | Big-picture trend bias | Weekly chart — set it and forget direction |
+
+---
+
+## Workflow for Analysis (Suggested Order)
+
+1. **Weekly Ichimoku** → Decide overall trend bias (bullish, bearish, neutral)
+2. **Daily EMA 9/21/50** → Identify where we are in the trend
+3. **RSI + MFI** → Check if the move is confirmed by volume
+4. **ATR** → Set stop-loss distance
+5. **Bollinger %B** → Check if the move is getting exhausted
+6. **OBV divergence** → Final confirmation
+
+---
+
+*Created by Merlin — Merlin's Market Toolkit*
+*Data source: Yahoo Finance (suffix .COL)*
