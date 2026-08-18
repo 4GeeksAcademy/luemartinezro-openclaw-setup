@@ -487,40 +487,199 @@ def build_report(ticker_symbol, name, df, currency="COP"):
     return "\n".join(R)
 
 
+def build_telegram_report(symbol, name, df, currency):
+    """Compact one-paragraph summary per stock for Telegram."""
+    curr = currency
+    pf = f"{curr} $"
+    close = df['Close']
+    volume = df['Volume']
+    obv = calculate_obv(df)
+
+    rsi = calculate_rsi(close, RSI_PERIOD).iloc[-1]
+    macd_l, macd_s, macd_h = calculate_macd(close)
+    macd_bull = macd_l.iloc[-1] > macd_s.iloc[-1] and macd_h.iloc[-1] > 0
+    macd_bear = macd_l.iloc[-1] < macd_s.iloc[-1] and macd_h.iloc[-1] < 0
+    ema9 = calculate_ema(close, 9).iloc[-1]
+    ema21 = calculate_ema(close, 21).iloc[-1]
+    ema50 = calculate_ema(close, 50).iloc[-1]
+    lc = close.iloc[-1]
+    atr = calculate_atr(df, ATR_PERIOD).iloc[-1]
+    mfi = calculate_mfi(df, MFI_PERIOD).iloc[-1]
+    tenkan, kijun, sk_a, sk_b, _, _ = calculate_ichimoku(df)
+    avg_vol = volume.rolling(20).mean().iloc[-1]
+    lv = volume.iloc[-1]
+    vol_ratio = lv / avg_vol if pd.notna(avg_vol) and avg_vol > 0 else 1.0
+    obv_v = obv.iloc[-1]
+    obv_p = obv.iloc[-5] if len(obv) > 5 else obv_v
+
+    obv_dir = "accumulation" if obv_v > obv_p else "distribution"
+
+    # Volumen signal
+    vol_chg = close.iloc[-1] - close.iloc[-2] if len(close) > 1 else 0
+    if vol_ratio > 1.3 and vol_chg > 0:
+        vol_sig = "+HIGH VOL"
+    elif vol_ratio > 1.3 and vol_chg < 0:
+        vol_sig = "-HIGH VOL"
+    elif vol_ratio < 0.7 and vol_chg > 0:
+        vol_sig = "+LOW VOL"
+    elif vol_ratio < 0.7 and vol_chg < 0:
+        vol_sig = "-LOW VOL"
+    else:
+        vol_sig = "norm vol"
+
+    # RSI signal
+    if rsi < 30: rsi_sig = "oversold"
+    elif rsi > 70: rsi_sig = "overbought"
+    else: rsi_sig = "neutral"
+
+    # MACD
+    macd_sig = "bull" if macd_bull else ("bear" if macd_bear else "neutral")
+
+    # EMA alignment
+    if ema9 > ema21 and lc > ema9:
+        ema_sig = "bull"
+    elif ema9 < ema21 and lc < ema9:
+        ema_sig = "bear"
+    else:
+        ema_sig = "mixed"
+
+    trend = "bull" if lc > ema50 else "bear"
+
+    # MFI/RSI conflict
+    if rsi > 70 and mfi < 60:
+        mfi_note = "RSI overbought but MFI neutral"
+    elif rsi < 30 and mfi > 40:
+        mfi_note = "RSI oversold but MFI neutral"
+    else:
+        mfi_note = ""
+
+    # OBV divergence
+    obv_div = ""
+    if len(obv) > 5:
+        p_up = close.iloc[-1] > close.iloc[-5]
+        p_dn = close.iloc[-1] < close.iloc[-5]
+        o_up = obv_v > obv.iloc[-5]
+        o_dn = obv_v < obv.iloc[-5]
+        if p_up and o_dn:
+            obv_div = "⚠️bear diver"
+        elif p_dn and o_up:
+            obv_div = "⚡bull diver"
+
+    # Ichimoku cloud position
+    tnk_v = tenkan.iloc[-1]
+    kij_v = kijun.iloc[-1]
+    tk = "bull" if (pd.notna(tnk_v) and pd.notna(kij_v) and tnk_v > kij_v) else "bear"
+
+    cloud = ""
+    if pd.notna(sk_a.iloc[-1]) and pd.notna(sk_b.iloc[-1]):
+        if lc > max(sk_a.iloc[-1], sk_b.iloc[-1]):
+            cloud = "above"
+        elif lc < min(sk_a.iloc[-1], sk_b.iloc[-1]):
+            cloud = "below"
+        else:
+            cloud = "inside"
+
+    # Score
+    b, b_count = 0, 0
+    if rsi < 30: b += 1
+    elif rsi > 70: b -= 1
+    if macd_bull: b += 1
+    elif macd_bear: b -= 1
+    if ema_sig == "bull": b += 1
+    elif ema_sig == "bear": b -= 1
+    if trend == "bull": b += 1
+    else: b -= 1
+    if mfi < 20: b += 1
+    elif mfi > 80: b -= 1
+    if cloud == "above": b += 1
+    elif cloud == "below": b -= 1
+    if tk == "bull": b += 1
+    else: b -= 1
+    if "bull diver" in obv_div: b += 2
+    elif "bear diver" in obv_div: b -= 2
+
+    if b >= 3: verdict = "🟢BULLISH"
+    elif b <= -3: verdict = "🔴BEARISH"
+    elif b >= 1: verdict = "🟡MILD BULL"
+    elif b <= -1: verdict = "🟡MILD BEAR"
+    else: verdict = "⚪NEUTRAL"
+
+    lines = []
+    lines.append(f"{verdict}  **{name}** ({symbol})")
+    lines.append(f"  Price: {pf}{lc:>,.2f}  |  RSI: {rsi:.0f} ({rsi_sig})  |  MACD: {macd_sig}  |  Vol: {vol_sig}")
+    lines.append(f"  Trend: {trend} (EMA50)  |  EMA: {ema_sig}  |  TK: {tk}  |  Cloud: {cloud}  |  ATR: {atr:.0f} ({atr/lc*100:.1f}%)")
+    if obv_div:
+        lines.append(f"  OBV: {obv_dir} {obv_div}")
+    if mfi_note:
+        lines.append(f"  MFI: {mfi_note}")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
 def main():
+    import sys
+    telegram_mode = "--telegram" in sys.argv
+
     now = datetime.now()
     start_date = now - timedelta(days=LOOKBACK_DAYS)
     end_date = now
 
-    print("=" * 78)
-    print("  COLOMBIAN STOCKS — TECHNICAL ANALYSIS REPORT")
-    print(f"  Generated: {now.strftime('%Y-%b-%d %H:%M')} UTC")
-    print(f"  Source: Yahoo Finance (.CL = BVC Local, ADR = NYSE)")
-    print(f"  Analyzed: {', '.join(t[0] for t in TICKERS)}")
-    print("=" * 78)
-    print()
+    if not telegram_mode:
+        print("=" * 78)
+        print("  COLOMBIAN STOCKS — TECHNICAL ANALYSIS REPORT")
+        print(f"  Generated: {now.strftime('%Y-%b-%d %H:%M')} UTC")
+        print(f"  Source: Yahoo Finance (.CL = BVC Local, ADR = NYSE)")
+        print(f"  Analyzed: {', '.join(t[0] for t in TICKERS)}")
+        print("=" * 78)
+        print()
+
+    results = []
 
     for symbol, name, currency in TICKERS:
-        print(f"  \u2b07  Fetching {symbol} ({name})… ", end="", flush=True)
+        if not telegram_mode:
+            print(f"  \u2b07  Fetching {symbol} ({name})… ", end="", flush=True)
         try:
             df = yf.download(symbol, start=start_date, end=end_date, progress=False,
                              auto_adjust=True)
             if df.empty or len(df) < 30:
-                print(f"\u26a0  Insufficient data ({len(df)} rows)")
+                if not telegram_mode:
+                    print(f"\u26a0  Insufficient data ({len(df)} rows)")
                 continue
 
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = df.columns.get_level_values(0)
 
-            print(f"OK ({len(df)} days)")
-            report = build_report(symbol, name, df, currency)
-            print(report)
+            if telegram_mode:
+                results.append(build_telegram_report(symbol, name, df, currency))
+                if not telegram_mode:
+                    print(f"OK ({len(df)} days)")
+            else:
+                print(f"OK ({len(df)} days)")
+                report = build_report(symbol, name, df, currency)
+                print(report)
 
         except Exception as e:
-            print(f"\u2717 Error: {e}")
+            if not telegram_mode:
+                print(f"\u2717 Error: {e}")
+            else:
+                results.append(f"⚠️  **{name}** ({symbol}) — Error: {e}\n")
 
-    print("  \u2713 Done. All reports generated.")
-    print("=" * 78)
+    if telegram_mode:
+        # Print header
+        date_str = now.strftime('%A, %b %d, %Y')
+        print(f"\\ud83d\\udcca **COLOMBIAN STOCKS REPORT** — {date_str}")
+        print(f"Source: Yahoo Finance (.CL = BVC, ADR = NYSE)")
+        print(f"Generated: {now.strftime('%H:%M')} UTC")
+        print("")
+        print("\\u2501" * 40)
+        print("")
+        print("\n".join(results))
+        print("\\u2501" * 40)
+        print("\\ud83d\\udc49 Run with `--full` for full detailed report")
+    else:
+        print("  \u2713 Done. All reports generated.")
+        print("=" * 78)
 
 
 if __name__ == "__main__":
